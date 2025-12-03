@@ -1,0 +1,41 @@
+Tópicos para Desenvolvimento
+
+1. Problema Identificado
+- Dispersão de informações em múltiplos canais (WhatsApp, email, plataformas)
+- Dificuldade em acompanhar prazos e versões corretas de materiais
+- Falta de centralização das informações acadêmicas
+
+2. Objetivo do Sistema
+- Criar uma plataforma centralizada para registro de prazos
+- Facilitar o acompanhamento colaborativo de tarefas
+- Simplificar o acesso às informações acadêmicas
+
+3. Público-Alvo
+- Estudantes universitários
+- Turmas que necessitam de organização colaborativa
+- Usuários que precisam visualizar prazos de forma clara
+
+4. Funcionalidades Implementadas
+- ✅ Cadastro de novas tarefas (Nome, Data/Hora, Disciplina)
+- ✅ Listagem cronológica de todas as tarefas
+- ✅ Filtragem por disciplina
+- ✅ Interface responsiva e intuitiva
+- ✅ Armazenamento persistente em JSON
+
+5. Tecnologias Utilizadas
+- Flask (framework web Python)
+- HTML/CSS para interface
+- JSON para armazenamento de dados
+- Templates com herança para reutilização
+
+6. Próximos Passos (Edição/Remoção)
+- Implementar edição de tarefas existentes
+- Adicionar funcionalidade de exclusão
+- Sistema de confirmação para operações críticas
+- Melhorar validações de dados
+
+7. Benefícios Esperados
+- Redução de prazos perdidos
+- Melhoria na organização da turma
+- Facilidade no acesso às informações
+- Colaboração mais eficiente entre estudantes

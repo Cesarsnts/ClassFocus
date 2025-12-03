@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📋 Todas as Tarefas</h2>
+
+{% if disciplinas %}
+<div class="filtros">
+    <strong>Filtrar por disciplina:</strong>
+    {% for disciplina in disciplinas %}
+        <a href="{{ url_for('disciplina', nome_disciplina=disciplina) }}" class="disciplina-tag">
+            {{ disciplina }}
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if tarefas %}
+    {% for tarefa in tarefas %}
+    <div class="tarefa-item {% if tarefa.urgente %}urgente{% endif %}">
+        <h3>{{ tarefa.nome }}</h3>
+        <p><strong>📅 Data/Hora:</strong> {{ tarefa.data_hora }}</p>
+        <p><strong>📚 Disciplina:</strong> 
+            <a href="{{ url_for('disciplina', nome_disciplina=tarefa.disciplina) }}" class="disciplina-tag">
+                {{ tarefa.disciplina }}
+            </a>
+        </p>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>Nenhuma tarefa cadastrada ainda. <a href="{{ url_for('novo') }}">Seja o primeiro a adicionar!</a></p>
+{% endif %}
+{% endblock %}

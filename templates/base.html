@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Prazos Compartilhada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .nav {
+            margin: 20px 0;
+        }
+        .nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #3498db;
+        }
+        .tarefa-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .urgente {
+            border-left: 5px solid #e74c3c;
+        }
+        .disciplina-tag {
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        form {
+            display: grid;
+            gap: 10px;
+            max-width: 400px;
+        }
+        input, select, button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Lista de Prazos Compartilhada</h1>
+            <p>Acompanhe todas as tarefas acadêmicas da turma</p>
+        </div>
+        
+        <div class="nav">
+            <a href="{{ url_for('index') }}">🏠 Início</a>
+            <a href="{{ url_for('novo') }}">➕ Nova Tarefa</a>
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
