@@ -49,6 +49,9 @@
             padding: 2px 8px;
             border-radius: 3px;
             font-size: 0.8em;
+            margin-right: 8px;  
+            margin-bottom: 5px; 
+            text-decoration: none;
         }
         form {
             display: grid;
@@ -70,13 +73,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📚 Lista de Prazos Compartilhada</h1>
+            <h1>Lista de Prazos Compartilhada</h1>
             <p>Acompanhe todas as tarefas acadêmicas da turma</p>
         </div>
         
         <div class="nav">
-            <a href="{{ url_for('index') }}">🏠 Início</a>
+            <a href="{{ url_for('index') }}"> Início</a>
             <a href="{{ url_for('novo') }}">➕ Nova Tarefa</a>
+            <a href="{{ url_for('logout') }}" class="logout">Sair</a>
         </div>
 
         {% block content %}{% endblock %}

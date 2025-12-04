@@ -25,7 +25,7 @@
             padding: 40px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.17);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             backdrop-filter: blur(15px);
             color: white;
             text-align: center;
@@ -88,16 +88,16 @@
 <div class="container">
     <h2>Criar Conta</h2>
 
-    <form action="#">
-        <input type="text" placeholder="Nome completo" required>
-        <input type="email" placeholder="E-mail" required>
-        <input type="password" placeholder="Senha" required>
-        <input type="password" placeholder="Confirmar senha" required>
+    <form method="POST" action="{{ url_for('cadastro') }}">
+        <input type="text" name="nome" placeholder="Nome completo" required>
+        <input type="email" name="email" placeholder="E-mail" required>
+        <input type="password" name="senha" placeholder="Senha" required>
+        <input type="password" name="confirmar" placeholder="Confirmar senha" required>
 
         <button type="submit">Cadastrar</button>
 
         <div class="link">
-            <a href="login.html">Já tenho uma conta</a>
+            <a href="{{ url_for('login') }}">Já tenho uma conta</a>
         </div>
     </form>
 </div>

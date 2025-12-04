@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>📋 Todas as Tarefas</h2>
+<h2> Todas as Tarefas</h2>
 
 {% if disciplinas %}
 <div class="filtros">
@@ -18,8 +18,8 @@
     {% for tarefa in tarefas %}
     <div class="tarefa-item {% if tarefa.urgente %}urgente{% endif %}">
         <h3>{{ tarefa.nome }}</h3>
-        <p><strong>📅 Data/Hora:</strong> {{ tarefa.data_hora }}</p>
-        <p><strong>📚 Disciplina:</strong> 
+        <p><strong> Data/Hora:</strong> {{ tarefa.data_hora }}</p>
+        <p><strong> Disciplina:</strong> 
             <a href="{{ url_for('disciplina', nome_disciplina=tarefa.disciplina) }}" class="disciplina-tag">
                 {{ tarefa.disciplina }}
             </a>
