@@ -24,6 +24,14 @@
                 {{ tarefa.disciplina }}
             </a>
         </p>
+        {% if current_user.is_authenticated %}
+        <div>
+            <a href="{{ url_for('editar', tarefa_id=tarefa.id) }}">Editar</a>
+            <form method="POST" action="{{ url_for('deletar', tarefa_id=tarefa.id) }}" style="display:inline">
+                <button type="submit" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px;">Excluir</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
     {% endfor %}
 {% else %}

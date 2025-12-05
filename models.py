@@ -1,63 +1,38 @@
-import json
-import os
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-DATA_FILE = 'tarefas.json'
 
-class Tarefa:
-    def __init__(self, nome, data_hora, disciplina):
-        self.id = datetime.now().strftime("%Y%m%d%H%M%S")
-        self.nome = nome
-        self.data_hora = data_hora
-        self.disciplina = disciplina
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'data_hora': self.data_hora,
-            'disciplina': self.disciplina
-        }
+db = SQLAlchemy()
 
-class GerenciadorTarefas:
-    def __init__(self):
-        self.tarefas = self.carregar_tarefas()
-    
-    def carregar_tarefas(self):
-        if os.path.exists(DATA_FILE):
-            try:
-                with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                    dados = json.load(f)
-                    return dados
-            except (json.JSONDecodeError, Exception):
-                return []
-        return []
-    
-    def salvar_tarefas(self):
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(self.tarefas, f, ensure_ascii=False, indent=2)
-    
-    def adicionar_tarefa(self, tarefa):
-        self.tarefas.append(tarefa.to_dict())
-        self.salvar_tarefas()
-    
-    def obter_tarefas(self):
-        # Ordenar por data/hora (mais urgente primeiro)
+
+class User(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(120))
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.Text, nullable=False)
+
+    tarefas = db.relationship('Tarefa', backref='owner', lazy=True)
+
+    def set_password(self, senha):
+        self.password_hash = generate_password_hash(senha)
+
+    def check_password(self, senha):
+        return check_password_hash(self.password_hash, senha)
+
+
+class Tarefa(db.Model):
+    __tablename__ = 'tarefa'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(255), nullable=False)
+    data_hora = db.Column(db.DateTime, nullable=False)
+    disciplina = db.Column(db.String(120))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    @property
+    def urgente(self):
         try:
-            return sorted(self.tarefas, key=lambda x: x['data_hora'])
-        except (KeyError, TypeError):
-            return self.tarefas
-    
-    def obter_tarefas_por_disciplina(self, disciplina):
-        try:
-            tarefas_filtradas = [t for t in self.tarefas if t['disciplina'].lower() == disciplina.lower()]
-            return sorted(tarefas_filtradas, key=lambda x: x['data_hora'])
-        except (KeyError, TypeError):
-            return []
-    
-    def obter_disciplinas(self):
-        try:
-            disciplinas = list(set(t['disciplina'] for t in self.tarefas))
-            return sorted(disciplinas)
-        except (KeyError, TypeError):
-            return []
+            return self.data_hora <= datetime.utcnow()
+        except Exception:
+            return False

@@ -68,6 +68,31 @@
             color: white;
             cursor: pointer;
         }
+        .logout {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .logout:hover {
+            color: #c0392b;
+            text-decoration: underline;
+        }
+
+        /* Flash messages */
+        .flashes {
+            margin: 10px 0 20px 0;
+        }
+        .flash {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .flash.success { background: #27ae60; }
+        .flash.warning { background: #f39c12; }
+        .flash.danger { background: #e74c3c; }
+        .flash.info { background: #3498db; }
+
     </style>
 </head>
 <body>
@@ -78,10 +103,27 @@
         </div>
         
         <div class="nav">
-            <a href="{{ url_for('index') }}"> Início</a>
-            <a href="{{ url_for('novo') }}">➕ Nova Tarefa</a>
-            <a href="{{ url_for('logout') }}" class="logout">Sair</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('index') }}"> Início</a>
+                <a href="{{ url_for('novo') }}">➕ Nova Tarefa</a>
+                <span>Olá, {{ current_user.nome }}</span>
+                <a href="{{ url_for('logout') }}" class="logout">Sair</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Entrar</a>
+                <a href="{{ url_for('cadastro') }}">Criar conta</a>
+            {% endif %}
         </div>
+
+        {# Exibir mensagens flash, se houver #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flashes">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
 
         {% block content %}{% endblock %}
     </div>

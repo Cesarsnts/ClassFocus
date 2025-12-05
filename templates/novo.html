@@ -3,20 +3,24 @@
 {% block content %}
 <h2>➕ Nova Tarefa</h2>
 
-<form method="POST">
+{% if tarefa %}
+<form method="POST" action="{{ url_for('editar', tarefa_id=tarefa.id) }}">
+{% else %}
+<form method="POST" action="{{ url_for('novo') }}">
+{% endif %}
     <div>
         <label for="nome">Nome da Tarefa:</label>
-        <input type="text" id="nome" name="nome" required>
+        <input type="text" id="nome" name="nome" required value="{{ tarefa.nome if tarefa else '' }}">
     </div>
     
     <div>
         <label for="data_hora">Data e Hora do Prazo:</label>
-        <input type="datetime-local" id="data_hora" name="data_hora" required>
+        <input type="datetime-local" id="data_hora" name="data_hora" required value="{{ tarefa.data_hora if tarefa else '' }}">
     </div>
     
     <div>
         <label for="disciplina">Disciplina:</label>
-        <input type="text" id="disciplina" name="disciplina" list="disciplinas" required>
+        <input type="text" id="disciplina" name="disciplina" list="disciplinas" required value="{{ tarefa.disciplina if tarefa else '' }}">
         <datalist id="disciplinas">
             {% for disciplina in disciplinas %}
             <option value="{{ disciplina }}">
@@ -24,8 +28,13 @@
         </datalist>
     </div>
     
-    <button type="submit">Adicionar Tarefa</button>
+    <button type="submit">{{ 'Salvar alterações' if tarefa else 'Adicionar Tarefa' }}</button>
 </form>
+{% if tarefa %}
+<form method="POST" action="{{ url_for('deletar', tarefa_id=tarefa.id) }}" style="display:inline; margin-top:10px">
+    <button type="submit" style="background:#e74c3c; margin-left:10px">Excluir</button>
+</form>
+{% endif %}
 
 <div class="nav">
     <a href="{{ url_for('index') }}">← Voltar para a lista</a>

@@ -1,63 +1,206 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from models import Tarefa, GerenciadorTarefas
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_migrate import Migrate
+from models import db, User, Tarefa
+import pymysql
+import os
+
 
 app = Flask(__name__)
-app.secret_key = "minha_chave_super_secreta_123"
+# Chave secreta (do ambiente ou padrão para desenvolvimento)
+app.secret_key = os.environ.get('SECRET_KEY', 'minha_chave_super_secreta_123')
 
-gerenciador = GerenciadorTarefas()
+# Configuração do MySQL — tenta usar DATABASE_URL, senão usa variáveis separadas
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Se DATABASE_URL está definida, usa direto
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # Caso contrário, constrói a partir de variáveis de ambiente com valores padrão
+    DB_USER = os.environ.get('DB_USER', 'root')
+    DB_PASS = os.environ.get('DB_PASS', 'password')
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_PORT = os.environ.get('DB_PORT', 3306)
+    DB_NAME = os.environ.get('DB_NAME', 'classfocus')
+    
+    def create_database_if_not_exists():
+        """Conecta ao servidor MySQL e cria o banco se não existir."""
+        try:
+            conn = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, port=int(DB_PORT))
+            with conn.cursor() as cur:
+                cur.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print('Erro ao criar/verificar banco de dados MySQL:', e)
+    
+    # Garante que o banco exista antes de inicializar o SQLAlchemy
+    create_database_if_not_exists()
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{int(DB_PORT)}/{DB_NAME}'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+migrate = Migrate(app, db)
+
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 
 @app.route('/')
 def inicio():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     return redirect(url_for('cadastro'))
+
 
 @app.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():
     if request.method == 'POST':
-        return redirect(url_for('login'))
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        confirmar = request.form.get('confirmar')
+
+        if senha != confirmar:
+            flash('As senhas não coincidem.', 'danger')
+            return render_template('cadastro.html')
+
+        if User.query.filter_by(email=email).first():
+            flash('E-mail já cadastrado.', 'warning')
+            return render_template('cadastro.html')
+
+        novo = User(nome=nome, email=email)
+        novo.set_password(senha)
+        db.session.add(novo)
+        db.session.commit()
+        login_user(novo)
+        return redirect(url_for('index'))
+
     return render_template('cadastro.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        return redirect(url_for('index'))
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(senha):
+            login_user(user)
+            return redirect(url_for('index'))
+        flash('Credenciais inválidas.', 'danger')
+        return render_template('login.html')
     return render_template('login.html')
 
 @app.route('/index')
+@login_required
 def index():
-    tarefas = gerenciador.obter_tarefas()
-    disciplinas = gerenciador.obter_disciplinas()
-    return render_template('index.html', tarefas=tarefas, disciplinas=disciplinas)
+    tarefas = Tarefa.query.order_by(Tarefa.data_hora).all()
+    disciplinas = sorted(list(set(t.disciplina for t in tarefas if t.disciplina)))
+
+    tarefas_template = []
+    for t in tarefas:
+        tarefas_template.append({
+            'id': t.id,
+            'nome': t.nome,
+            'data_hora': t.data_hora.strftime('%Y-%m-%dT%H:%M'),
+            'disciplina': t.disciplina,
+            'urgente': t.urgente
+        })
+
+    return render_template('index.html', tarefas=tarefas_template, disciplinas=disciplinas)
 
 @app.route('/disciplina/<nome_disciplina>')
+@login_required
 def disciplina(nome_disciplina):
-    tarefas = gerenciador.obter_tarefas_por_disciplina(nome_disciplina)
-    disciplinas = gerenciador.obter_disciplinas()
+    tarefas = Tarefa.query.filter(Tarefa.disciplina.ilike(nome_disciplina)).order_by(Tarefa.data_hora).all()
+    disciplinas = sorted(list(set(t.disciplina for t in Tarefa.query.all() if t.disciplina)))
+
+    tarefas_template = []
+    for t in tarefas:
+        tarefas_template.append({
+            'id': t.id,
+            'nome': t.nome,
+            'data_hora': t.data_hora.strftime('%Y-%m-%dT%H:%M'),
+            'disciplina': t.disciplina,
+            'urgente': t.urgente
+        })
+
     return render_template(
         'disciplina.html', 
-        tarefas=tarefas, 
+        tarefas=tarefas_template, 
         disciplinas=disciplinas, 
         disciplina_selecionada=nome_disciplina
     )
 
-@app.route("/logout")
+@app.route('/logout')
+@login_required
 def logout():
-    session.clear()
-    return redirect(url_for("login"))
+    logout_user()
+    return redirect(url_for('login'))
 
 @app.route('/novo', methods=['GET', 'POST'])
+@login_required
 def novo():
     if request.method == 'POST':
         nome = request.form['nome']
-        data_hora = request.form['data_hora']
+        data_hora_raw = request.form['data_hora']
         disciplina = request.form['disciplina']
-        
-        nova_tarefa = Tarefa(nome, data_hora, disciplina)
-        gerenciador.adicionar_tarefa(nova_tarefa)
-        
+        try:
+            data_hora = datetime.fromisoformat(data_hora_raw)
+        except Exception:
+            flash('Formato de data inválido.', 'danger')
+            return redirect(url_for('novo'))
+
+        tarefa = Tarefa(nome=nome, data_hora=data_hora, disciplina=disciplina, user_id=current_user.id)
+        db.session.add(tarefa)
+        db.session.commit()
         return redirect(url_for('index'))
-    
-    disciplinas = gerenciador.obter_disciplinas()
+
+    disciplinas = sorted(list(set(t.disciplina for t in Tarefa.query.all() if t.disciplina)))
     return render_template('novo.html', disciplinas=disciplinas)
+
+
+@app.route('/editar/<int:tarefa_id>', methods=['GET', 'POST'])
+@login_required
+def editar(tarefa_id):
+    tarefa = Tarefa.query.get_or_404(tarefa_id)
+    if request.method == 'POST':
+        tarefa.nome = request.form['nome']
+        try:
+            tarefa.data_hora = datetime.fromisoformat(request.form['data_hora'])
+        except Exception:
+            flash('Formato de data inválido.', 'danger')
+            return redirect(url_for('editar', tarefa_id=tarefa_id))
+        tarefa.disciplina = request.form['disciplina']
+        db.session.commit()
+        return redirect(url_for('index'))
+
+    disciplinas = sorted(list(set(t.disciplina for t in Tarefa.query.all() if t.disciplina)))
+    tarefa_data = {
+        'id': tarefa.id,
+        'nome': tarefa.nome,
+        'data_hora': tarefa.data_hora.strftime('%Y-%m-%dT%H:%M'),
+        'disciplina': tarefa.disciplina
+    }
+    return render_template('novo.html', disciplinas=disciplinas, tarefa=tarefa_data)
+
+
+@app.route('/deletar/<int:tarefa_id>', methods=['POST'])
+@login_required
+def deletar(tarefa_id):
+    tarefa = Tarefa.query.get_or_404(tarefa_id)
+    db.session.delete(tarefa)
+    db.session.commit()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)
