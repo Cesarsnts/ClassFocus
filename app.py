@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
 from models import db, User, Tarefa
+from dotenv import load_dotenv
 import pymysql
 import os
 
@@ -11,6 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'minha_chave_super_secreta_123')
 
 # Configuração do MySQL — tenta usar DATABASE_URL, senão usa variáveis separadas
+load_dotenv()
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
@@ -43,6 +45,9 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+with app.app_context():
+    db.create_all()
+
 migrate = Migrate(app, db)
 
 login_manager = LoginManager()
@@ -83,7 +88,7 @@ def cadastro():
         db.session.add(novo)
         db.session.commit()
         login_user(novo)
-        return redirect(url_for('index'))
+        return redirect(url_for('login'))
 
     return render_template('cadastro.html')
 
