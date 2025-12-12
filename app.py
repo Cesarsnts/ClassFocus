@@ -8,18 +8,14 @@ import os
 
 
 app = Flask(__name__)
-# Chave secreta (do ambiente ou padrão para desenvolvimento)
 app.secret_key = os.environ.get('SECRET_KEY', 'minha_chave_super_secreta_123')
 
-# Configuração do MySQL — tenta usar DATABASE_URL, senão usa variáveis separadas
 load_dotenv()
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # Se DATABASE_URL está definida, usa direto
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    # Caso contrário, constrói a partir de variáveis de ambiente com valores padrão
     DB_USER = os.environ.get('DB_USER', 'root')
     DB_PASS = os.environ.get('DB_PASS', 'password')
     DB_HOST = os.environ.get('DB_HOST', 'localhost')
@@ -37,7 +33,6 @@ else:
         except Exception as e:
             print('Erro ao criar/verificar banco de dados MySQL:', e)
     
-    # Garante que o banco exista antes de inicializar o SQLAlchemy
     create_database_if_not_exists()
     
     app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{int(DB_PORT)}/{DB_NAME}'
@@ -209,3 +204,4 @@ def deletar(tarefa_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
