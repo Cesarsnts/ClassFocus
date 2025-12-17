@@ -1,41 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
+from datetime import datetime
 from models import db, User, Tarefa
-from dotenv import load_dotenv
-import pymysql
 import os
 
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'minha_chave_super_secreta_123')
 
-load_dotenv()
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if DATABASE_URL:
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-else:
-    DB_USER = os.environ.get('DB_USER', 'root')
-    DB_PASS = os.environ.get('DB_PASS', 'password')
-    DB_HOST = os.environ.get('DB_HOST', 'localhost')
-    DB_PORT = os.environ.get('DB_PORT', 3306)
-    DB_NAME = os.environ.get('DB_NAME', 'classfocus')
-    
-    def create_database_if_not_exists():
-        """Conecta ao servidor MySQL e cria o banco se não existir."""
-        try:
-            conn = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, port=int(DB_PORT))
-            with conn.cursor() as cur:
-                cur.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print('Erro ao criar/verificar banco de dados MySQL:', e)
-    
-    create_database_if_not_exists()
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{int(DB_PORT)}/{DB_NAME}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///classfocus.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -111,7 +85,7 @@ def index():
         tarefas_template.append({
             'id': t.id,
             'nome': t.nome,
-            'data_hora': t.data_hora.strftime('%Y-%m-%dT%H:%M'),
+            'data_hora': t.data_hora,
             'disciplina': t.disciplina,
             'urgente': t.urgente
         })
@@ -129,7 +103,7 @@ def disciplina(nome_disciplina):
         tarefas_template.append({
             'id': t.id,
             'nome': t.nome,
-            'data_hora': t.data_hora.strftime('%Y-%m-%dT%H:%M'),
+            'data_hora': t.data_hora,
             'disciplina': t.disciplina,
             'urgente': t.urgente
         })
